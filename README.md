@@ -1,3 +1,0 @@
-# Yuchen
-
-SAS Lab
