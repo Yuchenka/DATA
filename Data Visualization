@@ -1,0 +1,12 @@
+main: Data Visualization using WHO COVID-19 Data
+
+
+
+##load neccessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(scales)
+library(lubridate)
+library(gridExtra)
+
