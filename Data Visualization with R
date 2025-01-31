@@ -35,7 +35,7 @@ ggplot(global_newcases, aes(x = Date_reported, y = global_new_cases)) +
   scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +  
   theme_minimal()
 
-##reporting dynamics by year
+##Reporting dynamics by year Covid-19
 years <- c(2020:2024)
 plot_list <- list()
 for (i in years) {
@@ -46,6 +46,8 @@ for (i in years) {
     filter(year(Date_reported) == i) # Filter data for the current year
   plot <- ggplot(global_newcases, aes(x = Date_reported, y = global_new_cases)) +
     geom_line(aes(y = global_new_cases), color = "blue", alpha = 0.5, size = 1) +
+    geom_hline(yintercept=1000000, linetype="dashed", color="red") +
+    geom_hline(yintercept=5000000, linetype="dashed", color="green") +
     labs(title = paste("Weekly Global Trend of New COVID-19 Cases Year", i),
          x = "Date",
          y = "New Cases (weekly)") +
@@ -53,7 +55,8 @@ for (i in years) {
     theme_minimal()
   print(plot); plot_list[[length(plot_list) + 1]] <- plot
 }
-grid.arrange(grobs = plot_list, nrow = 3, ncol = 2) 
+grid.arrange(grobs = plot_list, nrow = 3, ncol = 2)  
+ggsave("/Users/yuchenjiang/Desktop/covid_output1.pdf",width = 10, height = 6,  dpi = 300)
 
 
 
@@ -93,7 +96,7 @@ ggplot(countries, aes(x = reorder(Country, Max_Cumulative_Cases), y = Max_Cumula
     axis.title.x = element_text(size=12, face="bold"),
     axis.title.y = element_text(size=12, face="bold")
   )
-ggsave("/Users/yuchenjiang/Desktop/covid_cases_plot.pdf",width = 10, height = 6,  dpi = 300)
+ggsave("/Users/yuchenjiang/Desktop/covid_output2.pdf",width = 10, height = 6,  dpi = 300)
 
 
 
