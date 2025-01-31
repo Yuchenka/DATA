@@ -1,6 +1,4 @@
-main: Data Visualization using WHO COVID-19 Data
-
-
+### Data visualization with WHO COVID-19 case data using ggplot2 ###
 
 ##load neccessary libraries
 library(ggplot2)
@@ -9,4 +7,123 @@ library(tidyverse)
 library(scales)
 library(lubridate)
 library(gridExtra)
+
+##import COVID-19 dataset
+covid <- read.csv("/Users/yuchenjiang/Desktop/weekly_cases_deaths.csv")
+#dim(covid); str(covid); head(covid)
+
+##clean NAs
+covid1 <- subset(covid, !is.na(New_cases))
+
+
+
+### PART1: Global trend of new Covid-19 cases reported ###
+
+##prepare dataset
+covid1$Date_reported <- as.Date(covid1$Date_reported)
+global_newcases <- covid1 %>% 
+  filter(New_cases >=0) %>%
+  group_by(Date_reported) %>% 
+  summarise(global_new_cases = sum(New_cases, na.rm=TRUE))
+
+##generate plot
+ggplot(global_newcases, aes(x = Date_reported, y = global_new_cases)) +
+  geom_line(aes(y = global_new_cases), color = "blue", alpha = 0.5, size = 1) +
+  labs(title = "Weekly Global Trend of New COVID-19 Cases",
+       x = "Date",
+       y = "New Cases (weekly)") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +  
+  theme_minimal()
+
+##reporting dynamics by year
+years <- c(2020:2024)
+plot_list <- list()
+for (i in years) {
+  global_newcases <- covid1 %>% 
+    filter(New_cases >=0) %>%
+    group_by(Date_reported) %>% 
+    summarise(global_new_cases = sum(New_cases, na.rm=TRUE)) %>%
+    filter(year(Date_reported) == i) # Filter data for the current year
+  plot <- ggplot(global_newcases, aes(x = Date_reported, y = global_new_cases)) +
+    geom_line(aes(y = global_new_cases), color = "blue", alpha = 0.5, size = 1) +
+    labs(title = paste("Weekly Global Trend of New COVID-19 Cases Year", i),
+         x = "Date",
+         y = "New Cases (weekly)") +
+    scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +  
+    theme_minimal()
+  print(plot); plot_list[[length(plot_list) + 1]] <- plot
+}
+grid.arrange(grobs = plot_list, nrow = 3, ncol = 2) 
+
+
+
+### PART2: Top 10 Countries with Highest Cumulative Cases ###
+
+##prepare dataset
+countries <- covid1 %>%
+  mutate(Country = case_when(
+    Country == "United States of America" ~ "USA",
+    Country == "Republic of Korea" ~ "Korean",
+    Country == "United Kingdom of Great Britain and Northern Ireland" ~ "UK",
+    TRUE ~ Country
+    ))
+countries <- countries %>%
+  group_by(Country) %>%
+  summarise(Max_Cumulative_Cases = max(Cumulative_cases, na.rm = TRUE)) %>%
+  arrange(desc(Max_Cumulative_Cases)) %>%
+  head(10)
+
+##generate plot
+ggplot(countries, aes(x = reorder(Country, Max_Cumulative_Cases), y = Max_Cumulative_Cases)) +
+  geom_bar(stat = "identity", fill = "lightblue") +
+  geom_text(aes(label=scales::label_number(scale_cut = cut_short_scale())(Max_Cumulative_Cases)),
+            hjust=-0.1,
+            size=4) +
+  coord_flip() +
+  labs(title = "Top Countries with Highest COVID-19 Cases",
+       x = "Country",
+       y = "Cumulative Cases") +
+  scale_y_continuous(limits = c(0, 120000000),
+                     labels=label_number(scale_cut = cut_short_scale())) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size=15, face="bold", hjust=0.5),
+    axis.text.x = element_text(size=10),
+    axis.text.y = element_text(size=10),
+    axis.title.x = element_text(size=12, face="bold"),
+    axis.title.y = element_text(size=12, face="bold")
+  )
+ggsave("/Users/yuchenjiang/Desktop/covid_cases_plot.pdf",width = 10, height = 6,  dpi = 300)
+
+
+
+### New Covid-19 Cases Over Time by Country ###
+##prepare dataset
+selected <- c("United States of America", "India", "France","Germany")
+global_newcases <- covid1 %>%
+  filter(New_cases >=0) %>%
+  filter(Country %in% selected) %>%
+  group_by(Date_reported, Country) %>%
+  summarise(global_new_cases = sum(New_cases), na.rm=TRUE)
+
+##generate plot
+ggplot(global_newcases, aes(x = Date_reported, y = global_new_cases, color = Country, group = Country)) +
+  geom_line(size = 1) +  # Line for each country
+  labs(title = "COVID-19 Cases Over Time by Country",
+       x = "Date",
+       y = "New Cases") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +  
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.x = element_text(size = 12, face = "bold"),
+    axis.title.y = element_text(size = 12, face = "bold"),
+    legend.title = element_text(size = 12, face = "bold"),  # Legend title formatting
+    legend.text = element_text(size = 10)  # Legend labels formatting
+  ) 
+
+
+
 
