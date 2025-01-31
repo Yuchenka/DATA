@@ -1,4 +1,4 @@
-Main: Data Visualization with R
+# Data Visualization with R
 
 Data source: World Health Organization (WHO) COVID-19 weekly cases and deaths
 
